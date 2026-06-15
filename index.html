@@ -1,0 +1,432 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice-to-Requirements Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #e2e8f0;
+        }
+
+        header {
+            background-color: #0f172a;
+            border-bottom: 1px solid #334155;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-subtitle {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #f1f5f9;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            resize: vertical;
+            min-height: 150px;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        button {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9375rem;
+        }
+
+        .btn-primary {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+            transform: translateY(-2px);
+        }
+
+        .output-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .section {
+            background: #0f172a;
+            border-left: 4px solid #6366f1;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: #6366f1;
+            margin-bottom: 0.75rem;
+            font-size: 0.9375rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .section-content {
+            color: #cbd5e1;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .section-content ol {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .section-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .section-content li:last-child {
+            margin-bottom: 0;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #334155;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        .error .section-title {
+            color: #ef4444;
+        }
+
+        .success {
+            border-left-color: #10b981;
+        }
+
+        .hint {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        footer {
+            background-color: #0f172a;
+            border-top: 1px solid #334155;
+            padding: 1.5rem 2rem;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.875rem;
+            margin-top: auto;
+        }
+
+        footer a {
+            color: #6366f1;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: #818cf8;
+        }
+
+        .empty-state {
+            color: #64748b;
+            font-size: 0.875rem;
+            padding: 2rem 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1 class="header-title">Voice-to-Requirements Agent</h1>
+            <p class="header-subtitle">IT Services / Consulting</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="card">
+                <h2 class="card-title">Meeting Transcript</h2>
+                <textarea id="transcript" placeholder="Paste meeting transcript here...">Sarah kicks off the meeting with the Q4 planning discussion. Engineering lead Tom mentions the need for a robust API monitoring system that tracks response times and error rates in real-time. Product manager Lisa states that we must integrate Slack notifications for critical alerts by end of November. Tom volunteers to design the monitoring architecture and will have a proposal ready by October 15th. Lisa notes that we need dashboard visibility for the ops team and suggests using Grafana. 
+
+Unresolved: Tom asks whether we should build this in-house or use a third-party SaaS solution. Lisa says we need to evaluate at least two vendors by November 1st. Sarah decides that the team should focus on in-house development first, with a vendor evaluation as backup. 
+
+Tom raises a concern: current infrastructure might not handle the data ingestion volume. Sarah asks Tom to run a capacity assessment by October 8th. Lisa mentions that stakeholder approval from the CTO is pending. 
+
+Final decision: Launch MVP by end of Q4 with Slack integration mandatory. The full dashboard can be phased in.</textarea>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="analyzeTranscript()">
+                        Analyze Transcript
+                        <div class="hint">Try it →</div>
+                    </button>
+                    <button class="btn-secondary" onclick="clearAll()">Clear</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Analysis Results</h2>
+                <div id="output">
+                    <div class="empty-state">Analysis will appear here...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        Powered by Bharat AI · For more information connect <a href="mailto:atulmca@yahoo.com">atulmca@yahoo.com</a>
+    </footer>
+
+    <script>
+        async function analyzeTranscript() {
+            const transcript = document.getElementById('transcript').value.trim();
+            if (!transcript) {
+                showError('Please enter a meeting transcript');
+                return;
+            }
+
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Analyzing transcript...</div>';
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'claude-haiku-4-5-20251001',
+                        max_tokens: 2048,
+                        messages: [{
+                            role: 'user',
+                            content: `You are an AI scribe and business analyst. Extract from this meeting transcript:
+
+1. REQUIREMENTS: All stated and implied requirements (product features, integrations, constraints, compliance needs)
+2. ACTION ITEMS: All action items with owner (if mentioned) and due date (if mentioned)
+3. DECISIONS: All decisions made by the team
+4. OPEN QUESTIONS: All open questions or risks raised
+
+Format your response EXACTLY as follows:
+## REQUIREMENTS
+1. [requirement]
+2. [requirement]
+
+## ACTION ITEMS
+1. [action] | Owner: [name or "Not specified"] | Due: [date or "Not specified"]
+2. [action] | Owner: [name or "Not specified"] | Due: [date or "Not specified"]
+
+## DECISIONS
+1. [decision]
+2. [decision]
+
+## OPEN QUESTIONS
+1. [question/risk]
+2. [question/risk]
+
+Be concise. Do not add assumptions. Only extract what is explicitly stated or clearly implied.
+
+TRANSCRIPT:
+${transcript}`
+                        })
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const text = data.content[0].text;
+                displayResults(text);
+            } catch (error) {
+                showError('Error analyzing transcript: ' + error.message);
+            }
+        }
+
+        function displayResults(text) {
+            const sections = {
+                'REQUIREMENTS': [],
+                'ACTION ITEMS': [],
+                'DECISIONS': [],
+                'OPEN QUESTIONS': []
+            };
+
+            const lines = text.split('\n');
+            let currentSection = null;
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('##')) {
+                    currentSection = trimmed.replace(/^##\s*/, '').trim();
+                } else if (trimmed.match(/^\d+\.\s/) && currentSection && sections[currentSection]) {
+                    sections[currentSection].push(trimmed.replace(/^\d+\.\s*/, ''));
+                }
+            }
+
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = `
+                <div class="output-sections">
+                    ${renderSection('Requirements', sections['REQUIREMENTS'])}
+                    ${renderSection('Action Items', sections['ACTION ITEMS'])}
+                    ${renderSection('Decisions', sections['DECISIONS'])}
+                    ${renderSection('Open Questions', sections['OPEN QUESTIONS'])}
+                </div>
+            `;
+        }
+
+        function renderSection(title, items) {
+            if (items.length === 0) {
+                items = ['None identified'];
+            }
+            const html = items.map((item, i) => `<li>${escapeHtml(item)}</li>`).join('');
+            return `
+                <div class="section success">
+                    <div class="section-title">${title}</div>
+                    <div class="section-content">
+                        <ol>${html}</ol>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = `
+                <div class="section error">
+                    <div class="section-title">Error</div>
+                    <div class="section-content">${escapeHtml(message)}</div>
+                </div>
+            `;
+        }
+
+        function clearAll() {
+            document.getElementById('transcript').value = '';
+            document.getElementById('output').innerHTML = '<div class="empty-state">Analysis will appear here...</div>';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
+```
